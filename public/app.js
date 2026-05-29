@@ -10,6 +10,7 @@ const inboxList = document.querySelector('#inbox-list');
 const instructionInput = document.querySelector('#instruction');
 const composeButton = document.querySelector('#compose-button');
 const outputInput = document.querySelector('#composed-output');
+const llmOutputInput = document.querySelector('#llm-output');
 const copyButton = document.querySelector('#copy-button');
 const historyTitleInput = document.querySelector('#history-title');
 const historyTypeInput = document.querySelector('#history-type');
@@ -23,8 +24,11 @@ async function api(path, options = {}) {
   });
 
   if (!response.ok) {
-    const payload = await response.json().catch(() => ({}));
-    throw new Error(payload.error || 'request failed');
+    const payload = await response.json().catch((error) => {
+      console.error('Failed to parse error response', error);
+      return { error: `${response.status} ${response.statusText}` };
+    });
+    throw new Error(payload.error || `${response.status} ${response.statusText}`);
   }
 
   if (response.status === 204) {
@@ -166,11 +170,12 @@ saveHistoryButton.addEventListener('click', async () => {
       type: historyTypeInput.value,
       title: historyTitleInput.value,
       prompt: outputInput.value,
-      output: outputInput.value
+      output: llmOutputInput.value
     })
   });
 
   historyTitleInput.value = '';
+  llmOutputInput.value = '';
   await loadHistory();
 });
 

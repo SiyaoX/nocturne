@@ -21,6 +21,7 @@
   },
   "homepage": "https://github.com/SiyaoX/nocturne#readme",
   "dependencies": {
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.5.2"
   }
 }

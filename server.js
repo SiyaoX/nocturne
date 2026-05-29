@@ -1,6 +1,8 @@
 const express = require('express');
+const { rateLimit } = require('express-rate-limit');
 const fs = require('fs/promises');
 const path = require('path');
+const crypto = require('crypto');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -12,6 +14,15 @@ const historyMarkdownPath = path.join(dataDir, 'history.md');
 
 app.use(express.json({ limit: '1mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(
+  '/api',
+  rateLimit({
+    windowMs: 60 * 1000,
+    limit: 120,
+    standardHeaders: true,
+    legacyHeaders: false
+  })
+);
 
 async function ensureDataFiles() {
   await fs.mkdir(dataDir, { recursive: true });
@@ -101,7 +112,7 @@ app.post('/api/inbox', async (req, res, next) => {
 
     const items = await readJson(inboxPath);
     const item = {
-      id: `inbox_${Date.now()}`,
+      id: `inbox_${crypto.randomUUID()}`,
       source,
       content,
       createdAt: new Date().toISOString()
@@ -163,7 +174,7 @@ app.post('/api/history', async (req, res, next) => {
 
     const entries = await readJson(historyPath);
     const entry = {
-      id: `history_${Date.now()}`,
+      id: `history_${crypto.randomUUID()}`,
       type,
       title: title || `${type} entry`,
       prompt,
