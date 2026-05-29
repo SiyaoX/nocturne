@@ -143,12 +143,16 @@ app.delete('/api/inbox/:id', async (req, res, next) => {
   }
 });
 
-app.post('/api/compose', (req, res) => {
-  const instruction = typeof req.body.instruction === 'string' ? req.body.instruction : '';
-  const selectedItems = Array.isArray(req.body.selectedItems) ? req.body.selectedItems : [];
+app.post('/api/compose', (req, res, next) => {
+  try {
+    const instruction = typeof req.body.instruction === 'string' ? req.body.instruction : '';
+    const selectedItems = Array.isArray(req.body.selectedItems) ? req.body.selectedItems : [];
 
-  const prompt = buildPrompt(instruction, selectedItems);
-  res.json({ prompt });
+    const prompt = buildPrompt(instruction, selectedItems);
+    res.json({ prompt });
+  } catch (error) {
+    next(error);
+  }
 });
 
 app.get('/api/history', async (_req, res, next) => {

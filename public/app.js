@@ -16,6 +16,12 @@ const historyTitleInput = document.querySelector('#history-title');
 const historyTypeInput = document.querySelector('#history-type');
 const saveHistoryButton = document.querySelector('#save-history-button');
 const historyList = document.querySelector('#history-list');
+const statusElement = document.querySelector('#status');
+
+function setStatus(message, isError = false) {
+  statusElement.textContent = message;
+  statusElement.style.color = isError ? '#ff7b7b' : '';
+}
 
 async function api(path, options = {}) {
   const response = await fetch(path, {
@@ -70,8 +76,12 @@ function renderInbox() {
     deleteButton.type = 'button';
     deleteButton.textContent = 'Remove';
     deleteButton.addEventListener('click', async () => {
-      await api(`/api/inbox/${encodeURIComponent(item.id)}`, { method: 'DELETE' });
-      await loadInbox();
+      try {
+        await api(`/api/inbox/${encodeURIComponent(item.id)}`, { method: 'DELETE' });
+        await loadInbox();
+      } catch (error) {
+        setStatus(`Delete failed: ${error.message}`, true);
+      }
     });
 
     controls.append(includeCheckbox, deleteButton);
@@ -126,33 +136,43 @@ async function loadHistory() {
 
 inboxForm.addEventListener('submit', async (event) => {
   event.preventDefault();
-  await api('/api/inbox', {
-    method: 'POST',
-    body: JSON.stringify({
-      source: sourceInput.value.trim() || 'manual',
-      content: inboxContentInput.value
-    })
-  });
+  try {
+    await api('/api/inbox', {
+      method: 'POST',
+      body: JSON.stringify({
+        source: sourceInput.value.trim() || 'manual',
+        content: inboxContentInput.value
+      })
+    });
 
-  inboxForm.reset();
-  await loadInbox();
+    inboxForm.reset();
+    await loadInbox();
+    setStatus('Inbox updated.');
+  } catch (error) {
+    setStatus(`Inbox save failed: ${error.message}`, true);
+  }
 });
 
 composeButton.addEventListener('click', async () => {
-  const selectedIds = Array.from(document.querySelectorAll('#inbox-list input[type="checkbox"]:checked')).map(
-    (checkbox) => checkbox.dataset.itemId
-  );
+  try {
+    const selectedIds = Array.from(document.querySelectorAll('#inbox-list input[type="checkbox"]:checked')).map(
+      (checkbox) => checkbox.dataset.itemId
+    );
 
-  const selectedItems = state.inbox.filter((item) => selectedIds.includes(item.id));
-  const payload = await api('/api/compose', {
-    method: 'POST',
-    body: JSON.stringify({
-      instruction: instructionInput.value,
-      selectedItems
-    })
-  });
+    const selectedItems = state.inbox.filter((item) => selectedIds.includes(item.id));
+    const payload = await api('/api/compose', {
+      method: 'POST',
+      body: JSON.stringify({
+        instruction: instructionInput.value,
+        selectedItems
+      })
+    });
 
-  outputInput.value = payload.prompt;
+    outputInput.value = payload.prompt;
+    setStatus('Prompt composed.');
+  } catch (error) {
+    setStatus(`Compose failed: ${error.message}`, true);
+  }
 });
 
 copyButton.addEventListener('click', async () => {
@@ -164,21 +184,27 @@ copyButton.addEventListener('click', async () => {
 });
 
 saveHistoryButton.addEventListener('click', async () => {
-  await api('/api/history', {
-    method: 'POST',
-    body: JSON.stringify({
-      type: historyTypeInput.value,
-      title: historyTitleInput.value,
-      prompt: outputInput.value,
-      output: llmOutputInput.value
-    })
-  });
+  try {
+    await api('/api/history', {
+      method: 'POST',
+      body: JSON.stringify({
+        type: historyTypeInput.value,
+        title: historyTitleInput.value,
+        prompt: outputInput.value,
+        output: llmOutputInput.value
+      })
+    });
 
-  historyTitleInput.value = '';
-  llmOutputInput.value = '';
-  await loadHistory();
+    historyTitleInput.value = '';
+    llmOutputInput.value = '';
+    await loadHistory();
+    setStatus('History saved.');
+  } catch (error) {
+    setStatus(`History save failed: ${error.message}`, true);
+  }
 });
 
 Promise.all([loadInbox(), loadHistory()]).catch((error) => {
   console.error(error);
+  setStatus(`Initial load failed: ${error.message}`, true);
 });
