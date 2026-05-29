@@ -1,0 +1,27 @@
+{
+  "name": "nocturne",
+  "version": "1.0.0",
+  "description": "A human-directed workspace for routing context, reviews, and decisions between multiple LLMs.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "test": "node --test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SiyaoX/nocturne.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/SiyaoX/nocturne/issues"
+  },
+  "homepage": "https://github.com/SiyaoX/nocturne#readme",
+  "dependencies": {
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.5.2"
+  }
+}
